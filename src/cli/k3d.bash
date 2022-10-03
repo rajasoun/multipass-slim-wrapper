@@ -3,11 +3,18 @@
 function _k3d(){
     opt="$2"
     action=$( tr '[:upper:]' '[:lower:]' <<<"$opt" )
+    check_preconditions "multipass"
 case $action in
     setup)
-      _multipass "$@"
-      multipass exec "$VM_NAME" -- curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash || echo "k3d install ❌"
-      multipass exec "$VM_NAME" -- k3d cluster create k3s
+      display_runnning_vms "setup"
+      get_vm_name
+      launch_docker_vm "$VM_NAME" 
+      add_google_dns "$VM_NAME"
+      multipass exec "$VM_NAME" -- docker run hello-world || echo "docker run  ❌"
+      multipass exec "$VM_NAME" -- sudo snap install kubectl
+      K3D_SCRIPT="curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | K3S_KUBECONFIG_MODE="644" bash -"
+      multipass exec "$VM_NAME" -- /bin/bash -c $K3D_SCRIPT || echo "k3d install ❌"
+      multipass exec "$VM_NAME" -- k3d cluster create k3s || echo "k3s cluster creation ❌"
       ;;
     shell)
       _multipass "$@"
@@ -24,11 +31,18 @@ case $action in
       multipass exec "$VM_NAME" -- kubectl get pods --all-namespaces || echo "pods  ❌"
       ;;
     dashboard)
-      secret=$(multipass exec "$VM_NAME" -- sudo kubectl -n kube-system get secret | grep default-token | cut -d " " -f1)
-      token=$(multipass  exec "$VM_NAME" -- sudo kubectl -n kube-system describe secret "$secret" | grep token:)
+      GITHUB_URL=https://github.com/kubernetes/dashboard/releases
+      VERSION_KUBE_DASHBOARD=$(curl -w '%{url_effective}' -I -L -s -S ${GITHUB_URL}/latest -o /dev/null | sed -e 's|.*/||')
+      YAML_MANIFEST=https://raw.githubusercontent.com/kubernetes/dashboard/${VERSION_KUBE_DASHBOARD}/aio/deploy/recommended.yaml
+      multipass exec "$VM_NAME"  -- kubectl create -f $YAML_MANIFEST
+      VM_MOUNT_DIR="/yaml-manifests"
+      mount_dir "$VM_NAME" "${PWD}/iam/admin" $VM_MOUNT_DIR
+      multipass exec "$VM_NAME"  --working-directory $VM_MOUNT_DIR  -- kubectl create -f dashboard.admin-user.yml -f dashboard.admin-user-role.yml
+      
+      token=$(multipass exec "$VM_NAME"  -- kubectl -n kubernetes-dashboard create token admin-user)
       IP=$(multipass info "$VM_NAME" | grep IPv4 | awk '{ print $2 }')
 
-      multipass exec "$VM_NAME"  -- sudo kubectl port-forward -n kube-system service/kubernetes-dashboard \
+      multipass exec "$VM_NAME"  -- sudo kubectl port-forward -n kubernetes-dashboard service/kubernetes-dashboard \
                                     10443:443 --address 0.0.0.0 > /dev/null 2>&1 &
       echo "Dashboard URL: https://$IP:10443"
       echo "$token"

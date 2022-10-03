@@ -3,7 +3,17 @@
 function launch_vm(){
     VM_NAME=$1
     #multipass launch -n "$VM_NAME"
-    multipass launch -c"$CPU" -m"$MEMORY" -d"$DISK" -n "$VM_NAME"
+    multipass launch -c"$CPU" -m"$MEMORY" -d"$DISK" -n "$VM_NAME" 
+    IP=$(multipass info "$VM_NAME" | grep IPv4 | awk '{print $2}')
+
+    echo "${GREEN}VM Creation Sucessfull${NC}"
+    echo "${GREEN}VM Name : $VM_NAME |  IP: $IP${NC}"
+}
+
+function launch_docker_vm(){
+    VM_NAME=$1
+    #multipass launch -n "$VM_NAME"
+    multipass launch -n "$VM_NAME" docker
     IP=$(multipass info "$VM_NAME" | grep IPv4 | awk '{print $2}')
 
     echo "${GREEN}VM Creation Sucessfull${NC}"
@@ -31,8 +41,9 @@ function upgrade(){
 
 function mount_dir(){
     VM_NAME=$1
-    DIR=$2
-    multipass mount "$DIR" "$VM_NAME":/home/ubuntu/host-dir
+    HOST_DIR=$2
+    VM_DIR=$3
+    multipass mount "$HOST_DIR" "$VM_NAME":/$VM_DIR
 }
 
 function setup(){
