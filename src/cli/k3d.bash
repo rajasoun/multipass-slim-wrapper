@@ -5,15 +5,23 @@ function _k3d(){
     action=$( tr '[:upper:]' '[:lower:]' <<<"$opt" )
 case $action in
     setup)
-      #_multipass "$@"
-      multipass exec "$VM_NAME" -- curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | bash || echo "k3d install ❌"
-      multipass exec "$VM_NAME" -- k3d cluster create microk3s
+      _multipass "$@"
+      multipass exec "$VM_NAME" -- curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash || echo "k3d install ❌"
+      multipass exec "$VM_NAME" -- k3d cluster create k3s
       ;;
-    status)
+    shell)
       _multipass "$@"
       ;;
+    status)
+      echo -e "\n${GREEN}Nodes:${NC}"
+      multipass exec "$VM_NAME" -- kubectl get nodes || echo "pods  ❌"
+      echo -e "\n${GREEN}Services:${NC}"
+      multipass exec "$VM_NAME" -- kubectl get services || echo "pods  ❌"
+      echo -e "\n${GREEN}PODs:${NC}"
+      multipass exec "$VM_NAME" -- kubectl get pods --all-namespaces || echo "pods  ❌"
+      ;;
     pods)
-      kubectl get pods --all-namespaces || echo "pods  ❌"
+      multipass exec "$VM_NAME" -- kubectl get pods --all-namespaces || echo "pods  ❌"
       ;;
     dashboard)
       secret=$(multipass exec "$VM_NAME" -- sudo kubectl -n kube-system get secret | grep default-token | cut -d " " -f1)
@@ -34,6 +42,7 @@ cat <<-EOF
 Commands:
 ---------
   setup       -> Install and Configure microk8s
+  shell       -> Enter Shell
   dashboard   -> Access k8s Dashboard
   pods        -> List Running PODs
   clean       -> Clean multipass VM

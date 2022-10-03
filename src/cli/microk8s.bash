@@ -49,6 +49,7 @@ cat <<-EOF
 Commands:
 ---------
   setup       -> Install and Configure microk8s
+  shell       -> Enter Shell
   dashboard   -> Access k8s Dashboard
   pods        -> List Running PODs
   clean       -> Clean multipass VM
