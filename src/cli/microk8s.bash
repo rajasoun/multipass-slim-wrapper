@@ -21,19 +21,24 @@ case $action in
       _multipass "$@"
       ;;
     status)
-      _multipass "$@"
+      echo -e "\n${GREEN}Nodes:${NC}"
+      multipass exec "$VM_NAME" -- kubectl get nodes || echo "pods  ❌"
+      echo -e "\n${GREEN}Services:${NC}"
+      multipass exec "$VM_NAME" -- kubectl get services || echo "pods  ❌"
+      echo -e "\n${GREEN}PODs:${NC}"
+      multipass exec "$VM_NAME" -- kubectl get pods --all-namespaces || echo "pods  ❌"
       ;;
     pods)
-      kubectl get pods --all-namespaces || echo "pods  ❌"
+      multipass exec "$VM_NAME" -- kubectl get pods --all-namespaces || echo "pods  ❌"
       ;;
     dashboard)
       token=$(multipass exec "$VM_NAME" -- kubectl describe secret -n kube-system microk8s-dashboard-token | grep -E '^token' | awk '{print $2}')
       IP=$(multipass info "$VM_NAME" | grep IPv4 | awk '{ print $2 }')
-      multipass exec "$VM_NAME"  -- iptables -P FORWARD ACCEPT || echo "iptables update ❌"
+      multipass exec "$VM_NAME"  -- sudo iptables -P FORWARD ACCEPT || echo "iptables update ❌"
       multipass exec "$VM_NAME"  -- kubectl port-forward -n kube-system service/kubernetes-dashboard \
                                     10443:443 --address 0.0.0.0 > /dev/null 2>&1 &
-      echo "Dashboard URL: https://$IP:10443"
-      echo "$token"
+      echo -e "\n${BOLD}Dashboard URL:${NC} https://$IP:10443"
+      echo -e "\n$token"
       ;;
     clean)
       _multipass "$@"
