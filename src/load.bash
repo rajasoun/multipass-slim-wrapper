@@ -16,3 +16,5 @@ source "$SCRIPT_DIR/cli/multipass.bash"
 source "$SCRIPT_DIR/cli/microk8s.bash"
 # shellcheck source=/dev/null
 source "$SCRIPT_DIR/cli/k3d.bash"
+# shellcheck source=/dev/null
+source "$SCRIPT_DIR/cli/k3s.bash"

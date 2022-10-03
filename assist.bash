@@ -21,6 +21,7 @@ case $choice in
     multipass) _multipass "$@" ;;
      microk8s)  _microk8s "$@" ;;
           k3d)       _k3d "$@" ;;
+          k3s)       _k3s "$@" ;;
     *)
       echo "${RED}Usage: ./assist <command>${NC}"
 cat <<-EOF
@@ -28,7 +29,8 @@ Commands:
 ---------
   multipass    -> Manage multipass - virtualization orchestrator
   microk8s     -> Manage microk8s  - k8s orchestrator
-      k3d      -> Manage microk8s  - k3s (minimal Kubernetes distribution) in docker
+      k3d      -> Manage k3d - Kubernetes distribution in docker
+      k3s      -> Manage k3s 3 node Cluster 
 EOF
     ;;
 esac

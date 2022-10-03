@@ -325,3 +325,4 @@ $RECYCLE.BIN/
 .cache_ggshield
 .vscode
 kubeconfig/.admin.kubeconfig
+.k3s.yaml
