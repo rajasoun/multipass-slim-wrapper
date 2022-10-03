@@ -12,7 +12,7 @@ Install [Multipass](https://multipass.run/install)
 
 ### microk8s
 
-1. Run `export MEMORY=4G DISK=20G && ./assist.bash microk8s ` wrapper script for microk8s
+1. Run `export CPU=2 MEMORY=4G DISK=20G && ./assist.bash microk8s` wrapper script for microk8s
 
 1. Run `./assist.bash microk8s dashboard ` to access k8s Dashboard on host system
 
