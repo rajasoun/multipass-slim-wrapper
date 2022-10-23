@@ -11,10 +11,18 @@ case $action in
       launch_docker_vm "$VM_NAME" 
       add_google_dns "$VM_NAME"
       multipass exec "$VM_NAME" -- docker run hello-world || echo "docker run  ❌"
-      multipass exec "$VM_NAME" -- sudo snap install kubectl
-      K3D_SCRIPT="curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | K3S_KUBECONFIG_MODE="644" bash -"
-      multipass exec "$VM_NAME" -- /bin/bash -c $K3D_SCRIPT || echo "k3d install ❌"
-      multipass exec "$VM_NAME" -- k3d cluster create k3s || echo "k3s cluster creation ❌"
+      multipass exec "$VM_NAME" -- sudo snap install kubectl  --classic
+      multipass exec "$VM_NAME" -- sudo snap install helm --classic
+      K3D_INSTALL_CMD="curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | K3S_KUBECONFIG_MODE="644" bash -"
+      multipass exec "$VM_NAME" -- /bin/bash -c "${K3D_INSTALL_CMD}" || echo "k3d install ❌"
+      # Setup our cluster with 2 worker nodes (--agents in k3d command line) and 
+      # Expose the HTTP load balancer on the host on port 8080 
+      # so that we can interact with our application
+      # multipass exec "$VM_NAME" -- k3d cluster create k3s || echo "k3s cluster creation ❌"
+      multipass exec "$VM_NAME" -- k3d cluster create k3s-cluster \
+                                --api-port 6443 -p 8080:80@loadbalancer \
+                                --agents 2 || echo "k3s cluster creation ❌"
+      multipass exec "$VM_NAME" -- kubectl cluster-info
       ;;
     shell)
       _multipass "$@"
